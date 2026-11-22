@@ -1,0 +1,4 @@
+*.log
+buildlog*.txt
+.last-run.log
+__pycache__/
