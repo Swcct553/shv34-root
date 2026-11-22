@@ -1,0 +1,16 @@
+# 强制 LF 换行 —— 设备端 shell 脚本带 CRLF 会导致 shebang 失效
+# （#!/system/bin/sh\r 在内核 execve 时找不到解释器，利用静默失败）
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+*.c text eol=lf
+*.s text eol=lf
+*.md text eol=lf
+wb.sh text eol=lf
+*.bin binary
+probe26 binary
+rootshell binary
+su binary
+trig_bin binary
+trig_sock binary
+mt binary

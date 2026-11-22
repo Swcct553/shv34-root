@@ -55,8 +55,12 @@ adb shell /data/local/tmp/rootshell id
 ```bash
 adb shell /data/local/tmp/rootshell 'id; ls /data'   # 单条命令
 adb shell /data/local/tmp/rootshell                  # 交互 shell
-adb shell /data/local/tmp/.su/su -c id               # setuid su（tmpfs 上）
 ```
+
+**注意（SHV34 特有）**：量产内核禁用了 setuid 位（`chmod 4755` 直接 EPERM，
+详见 [docs/KERNEL-HARDENING.md](docs/KERNEL-HARDENING.md)），所以 `su` 的
+setuid 提权在本机不可用——**rootshell 是唯一 root 入口**。`wb.sh` 里的
+tmpfs su 流程是为其他可移植机型保留的，在 SHV34 上不影响 rootshell 工作。
 
 **每次重启后失效**，重跑上面三步即可（一键脚本见 [scripts/ROOTME.sh](scripts/ROOTME.sh)）。
 
@@ -98,6 +102,11 @@ adb shell /data/local/tmp/.su/su -c id               # setuid su（tmpfs 上）
 临时 root 重启即失效。永久 root 需要**先解 BL 锁**再刷 Magisk patch 过的 boot，
 完整路线与现状说明见 [docs/PERMANENT-ROOT.md](docs/PERMANENT-ROOT.md)。
 
+**为什么不建议装 SuperSU**：SHV34 量产内核有多层反 root 加固（/system 挂载
+拦截、setuid 全局禁用、/vendor 叠挂防稳定），SuperSU 的安装模型需要写
+/system + setuid，在锁 BL 状态下不可能成功，实测详见
+[docs/KERNEL-HARDENING.md](docs/KERNEL-HARDENING.md)。
+
 ## 目录结构
 
 ```
@@ -113,7 +122,8 @@ shv34-root/
 ├── kernel/               # 内核编译与符号提取（夏普 OSS 源码）
 ├── dirtycow/             # 备选攻击线：DirtyCow (CVE-2016-5195)
 ├── scripts/              # ROOTME.sh / boot 备份
-└── docs/PERMANENT-ROOT.md
+├── docs/PERMANENT-ROOT.md
+└── docs/KERNEL-HARDENING.md   # 量产内核反 root 加固实测（SuperSU 不可行的原因）
 ```
 
 ## 参考
