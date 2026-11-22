@@ -114,6 +114,24 @@ WRITABLE  : apdp(p40), blank00(p42), misc(p50), fotacache(p54)
 × HC_WP_GRP_SIZE[221]=1` = **4 MiB = 0x2000 扇区**；`0xae0000 / 0x2000 =
 1392` 正好是组边界。
 
+**扩展扫描（全部 bootloader / TrustZone 分区）**：
+
+```
+BLOCKED   : p6 mdtp, p9 xbl(SBL1), p13 tz, p15 hyp, p17 keymaster,
+            p19 cmnlib, p21 cmnlib64, p25 devcfg, p30 boot,
+            p33 aboot, p34 abootdup, p39 devinfo,
+            GPT 区域 LBA 0 / 1 / 2 / 17
+WRITABLE  : p38 dip, p40 apdp, p42 blank00, p50 misc, p54 fotacache
+```
+
+由此排除了两条看似可行的捷径：
+
+- **patch SBL1**：`xbl`(p9) 同样被保护，改不了「上电时施加 WP」的代码。
+- **改 GPT 把 `devinfo` 指向可写的 `dip`**：GPT 表区被保护，写不进去。
+  （另外 `dip` 实为 MDTP 防盗分区 `validate_DIP_and_firmware` 用，与
+  `device_info` 无关；aboot 里 `devinfo` 与 `Device is unlocked!
+  Skipping verification...` 相邻，确认按分区名读 devinfo。）
+
 ## 5. 结论与下一步
 
 所有标准运行时手段都已穷尽且无效，最符合的机制是：
