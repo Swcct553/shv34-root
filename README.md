@@ -107,6 +107,12 @@ tmpfs su 流程是为其他可移植机型保留的，在 SHV34 上不影响 roo
 /system + setuid，在锁 BL 状态下不可能成功，实测详见
 [docs/KERNEL-HARDENING.md](docs/KERNEL-HARDENING.md)。
 
+**解 BL 研究进展**：BL 仍未解锁。已确认 `devinfo` 的 `is_unlocked@0x10`
+结构，但 bootloader 关键分区在运行时被写保护，CMD29/CMD28 均无法清除。
+过程中发现一条**不需要内核 exploit 的任意原始 eMMC 命令通道**
+（`MMC_IOC_RPMB_CMD` 绕过量产内核的 `mmc_card_mmc()` ioctl 封锁），
+以及完整的写保护范围实测图谱，详见 [bl-research/README.md](bl-research/README.md)。
+
 ## 目录结构
 
 ```
@@ -121,6 +127,12 @@ shv34-root/
 │   └── README.md         # 构建部署细节 + 移植指南
 ├── kernel/               # 内核编译与符号提取（夏普 OSS 源码）
 ├── dirtycow/             # 备选攻击线：DirtyCow (CVE-2016-5195)
+├── bl-research/          # 解 BL 研究：原始 eMMC 命令通道 + 写保护实测
+│   ├── README.md         # 完整实验矩阵、结论与下一步
+│   ├── rpmb_cmd.c        # MMC_IOC_RPMB_CMD 任意命令工具
+│   ├── mmc_cmd2.c        # 修正版 MMC_IOC_CMD 工具（正确 EXT_CSD 索引）
+│   ├── wptest.sh         # 标记写入 + 清缓存回读，排除 page cache 假阳性
+│   └── wpscan.sh         # 分区可写性批量扫描
 ├── scripts/              # ROOTME.sh / boot 备份
 ├── docs/PERMANENT-ROOT.md
 └── docs/KERNEL-HARDENING.md   # 量产内核反 root 加固实测（SuperSU 不可行的原因）
